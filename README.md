@@ -1,88 +1,63 @@
-# DeepSeek 思维链对话客户端
+# DeepSeek 思维链对话客户端 —— 基于“思路论”的 AI 交互系统
 
-本地桌面应用：与 DeepSeek 对话，并展示**思维链流程图**。支持两种模式：
-- **DeepSeek API（云端）**：需联网，使用官方 API
-- **Ollama 本地**：使用本机已部署的模型，无需 API Key
+![思维链流程图示例](docs/screenshot.png) <!-- 可放置截图，若无则删除 -->
 
-## 功能
+本应用不仅是一个普通的 AI 对话工具，更是论文 **《基于AI时代的程序设计与计算机体系结构变化》** 中 **“思路机”** 概念的具体实现。它通过可视化思维链、外置记忆存储和交互式迭代优化，将 AI 从“一次性生成工具”转变为 **“可积累、可复用、可演化的思路载体”**。
 
-- **双模式**：可切换 DeepSeek 云端 API 或 Ollama 本地模型
-- **Ollama 模型选择**：选择「Ollama 本地」后，点击「刷新模型」获取已部署的模型列表，在下拉框中选取或自行输入模型名
-- **对话**：在输入框提问，获取回答并显示
-- **思维链流程图**：支持思维链的模型（如 deepseek-reasoner、deepseek-r1）会展示横向流程图
+---
 
-## 环境要求
+## ✨ 核心理念
+
+论文指出，当前大模型存在 **“百衲衣”困境** —— 能覆盖各种场景，却没有属于特定个体的 **“关系总和”**，导致间歇性失忆、幻觉等问题。  
+**思路论** 提出以 **“思路结点”** 为原子单元，通过 **双层存储架构**（结点存储器 + 调用存储器）将思维过程结构化存储，让 AI 在与用户的持续交互中 **“生长”出专属记忆**。
+
+本应用正是这一理论的实践：  
+每一次对话的推理过程都被解析为 **思路结点流程图**，你可以通过 **交互模式** 对思路进行 **反思、深入、裁去** 等操作，最终将可靠的思路存入 **外置记忆** 中，下次遇到类似问题时直接加载复用，大幅提升协作效率。
+
+---
+
+## 🚀 功能特点
+
+- **双模式支持**  
+  - **DeepSeek API（云端）**：使用官方 API，需联网和 API Key。  
+  - **Ollama 本地**：使用本机部署的模型（如 deepseek-r1），离线可用，无需 API Key。
+
+- **思维链可视化**  
+  支持思维链的模型（如 deepseek-reasoner、deepseek-r1）返回的推理过程会被解析为横向流程图，矩形表示步骤、菱形表示判断，一目了然。
+
+- **外置记忆存储**  
+  - 将成熟的思路（流程图 + 对话）保存到本地 JSON 文件或 MySQL 数据库。  
+  - 通过自然语言描述即可 **语义检索** 历史思路（如“上次那个算法优化的思路”），AI 自动匹配最接近的会话。  
+  - 结点内容自动去重，多个思路可共享同一结点，实现轻量化复用。
+
+- **交互模式 —— 思路的动态优化**  
+  在交互模式窗口中，你可以对流程图进行精细操作：  
+  - **反思**：基于当前对话，在最后一个高亮结点后重新生成思路。  
+  - **深入**：将选中的抽象结点展开为更详细的子流程图。  
+  - **裁去**：删除指定结点及其后续所有结点，精简思路。  
+  - **亮少**：回退一步高亮状态，方便分步交互。  
+  - **继续交互**：逐结点推进，直至流程图全亮，表示思路已成熟。
+
+- **自思考执行**  
+  - **直接自思考**：将当前流程图和会话一次性发给模型，得到最终结果。  
+  - **循环自思考**：按结点顺序逐步执行，每一步依赖上一步结果，模拟人类逐步推理。
+
+- **文件上传支持**  
+  可上传 `.txt` 或 `.docx` 文件，作为附件随问题一起发送，便于分析长文档。
+
+---
+
+## 🛠️ 环境要求
 
 - Python 3.8+
-- 使用 DeepSeek API 模式时需联网
+- 使用 DeepSeek API 模式时需联网，并拥有 [DeepSeek API Key](https://platform.deepseek.com/api_keys)
 - 使用 Ollama 模式时需先安装并运行 [Ollama](https://ollama.com/download)
 
-## 安装
+---
 
-```bash
-pip install -r requirements.txt
-```
+## 📦 安装
 
-## 模式一：DeepSeek API（云端）
-
-### 如何获取 API Key
-
-1. 打开 [DeepSeek 开放平台](https://platform.deepseek.com/)
-2. 登录或注册
-3. 进入 [API Keys](https://platform.deepseek.com/api_keys) 页面
-4. 创建新 Key，格式通常为 `sk-` 开头
-5. 复制 Key 并设置到环境变量（不要使用中文或占位符）
-
-```bash
-# Windows CMD（把 sk-xxxx 换成你的真实 Key）
-set DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxx
-
-# Windows PowerShell
-$env:DEEPSEEK_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
-
-# Linux / macOS
-export DEEPSEEK_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
-```
-
-### 余额
-
-调用 API 会消耗余额，需在 [充值页面](https://platform.deepseek.com/top_up) 为账户充值。
-
-## 模式二：Ollama 本地
-
-### 安装 Ollama
-
-1. 下载并安装 [Ollama](https://ollama.com/download)
-2. 启动 Ollama（安装后通常会自动运行，或运行 `ollama serve`）
-
-### 拉取 DeepSeek 模型
-
-```bash
-# 推荐：DeepSeek-R1（支持思维链）
-ollama pull deepseek-r1
-
-# 其他可选
-ollama pull deepseek-v3
-ollama pull deepseek-coder
-```
-
-### 使用
-
-1. 运行本应用，选择「Ollama 本地」
-2. 点击「刷新模型」获取本机已部署的模型列表
-3. 在下拉框中选择模型（如 deepseek-r1），或输入模型名（如 `deepseek-r1:8b`）
-4. 开始对话
-
-## 运行
-
-```bash
-cd /d "你的项目目录"
-python deepseek_chat_app.py
-```
-
-## 界面说明
-
-- **顶部**：模式切换（DeepSeek API / Ollama 本地）、Ollama 模型选择与刷新
-- **思维链流程图**：支持思维链的模型会在此展示横向流程图
-- **对话区**：消息记录
-- **底部**：输入框 + 发送按钮
+1. 克隆仓库：
+   ```bash
+   git clone https://github.com/silushidai/AI-.git
+   cd AI-
